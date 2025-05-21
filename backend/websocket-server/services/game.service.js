@@ -5,11 +5,11 @@ const END_TURN_DURATION = 5;
 
 const DECK_INIT = {
     dices: [
-        { id: 1, value: '', locked: true },
-        { id: 2, value: '', locked: true },
-        { id: 3, value: '', locked: true },
-        { id: 4, value: '', locked: true },
-        { id: 5, value: '', locked: true },
+        {id: 1, value: '', locked: true},
+        {id: 2, value: '', locked: true},
+        {id: 3, value: '', locked: true},
+        {id: 4, value: '', locked: true},
+        {id: 5, value: '', locked: true},
     ],
     rollsCounter: 1,
     rollsMaximum: 3
@@ -35,38 +35,38 @@ const CHOICES_INIT = {
 };
 
 const ALL_COMBINATIONS = [
-    { value: 'Brelan1', id: 'brelan1' },
-    { value: 'Brelan2', id: 'brelan2' },
-    { value: 'Brelan3', id: 'brelan3' },
-    { value: 'Brelan4', id: 'brelan4' },
-    { value: 'Brelan5', id: 'brelan5' },
-    { value: 'Brelan6', id: 'brelan6' },
-    { value: 'Full', id: 'full' },
-    { value: 'Carré', id: 'carre' },
-    { value: 'Yam', id: 'yam' },
-    { value: 'Suite', id: 'suite' },
-    { value: '≤8', id: 'moinshuit' },
-    { value: 'Sec', id: 'sec' },
-    { value: 'Défi', id: 'defi' }
+    {value: 'Brelan1', id: 'brelan1'},
+    {value: 'Brelan2', id: 'brelan2'},
+    {value: 'Brelan3', id: 'brelan3'},
+    {value: 'Brelan4', id: 'brelan4'},
+    {value: 'Brelan5', id: 'brelan5'},
+    {value: 'Brelan6', id: 'brelan6'},
+    {value: 'Full', id: 'full'},
+    {value: 'Carré', id: 'carre'},
+    {value: 'Yam', id: 'yam'},
+    {value: 'Suite', id: 'suite'},
+    {value: '≤8', id: 'moinshuit'},
+    {value: 'Sec', id: 'sec'},
+    {value: 'Défi', id: 'defi'}
 ];
 
 const GameService = {
 
     init: {
         gameState: () => {
-            const game = { ...GAME_INIT };
+            const game = {...GAME_INIT};
             game['gameState']['timer'] = TURN_DURATION;
-            game['gameState']['deck'] = { ...DECK_INIT };
-            game['gameState']['choices'] = { ...CHOICES_INIT };
+            game['gameState']['deck'] = {...DECK_INIT};
+            game['gameState']['choices'] = {...CHOICES_INIT};
             return game;
         },
 
         deck: () => {
-            return { ...DECK_INIT };
+            return {...DECK_INIT};
         },
 
         choices: () => {
-            return { ...CHOICES_INIT };
+            return {...CHOICES_INIT};
         }
     },
 
@@ -105,7 +105,7 @@ const GameService = {
             gameTimer: (playerKey, gameState) => {
                 const playerTimer = gameState.currentTurn === playerKey ? gameState.timer : 0;
                 const opponentTimer = gameState.currentTurn === playerKey ? 0 : gameState.timer;
-                return { playerTimer: playerTimer, opponentTimer: opponentTimer };
+                return {playerTimer: playerTimer, opponentTimer: opponentTimer};
             },
 
             deckViewState: (playerKey, gameState) => {
@@ -126,6 +126,16 @@ const GameService = {
                     idSelectedChoice: gameState.choices.idSelectedChoice,
                     availableChoices: gameState.choices.availableChoices
                 };
+            },
+
+            gridViewState: (playerKey, gameState) => {
+
+                return {
+                    displayGrid: true,
+                    canSelectCells: (playerKey === gameState.currentTurn) && (gameState.choices.availableChoices.length > 0),
+                    grid: gameState.grid
+                };
+
             }
         }
     },
@@ -177,44 +187,14 @@ const GameService = {
 
     choices: {
         findCombinations: (dices, isDefi, isSec) => {
-
             const allCombinations = ALL_COMBINATIONS;
+            const counts = Array(6).fill(0);
 
-            // Tableau des objets 'combinations' disponibles parmi 'ALL_COMBINATIONS'
-            const availableCombinations = [];
+            dices.forEach((dice) => {
+                counts[dice.value - 1]++;
+            })
 
-            // Tableau pour compter le nombre de dés de chaque valeur (de 1 à 6)
-            const counts = Array(7).fill(0);
-
-            let hasPair = false; // check: paire
-            let threeOfAKindValue = null; // check: valeur brelan
-            let hasThreeOfAKind = false; // check: brelan
-            let hasFourOfAKind = false; // check: carré
-            let hasFiveOfAKind = false; // check: yam
-            let hasStraight = false; // check: suite
-            let isLessThanEqual8 = false;
-            let sum = 0; // sum of dices
-
-            // -----------------------------------
-            // TODO: Vérifier les combinaisons possibles
-            // -----------------------------------
-
-            // return available combinations
-            allCombinations.forEach(combination => {
-                if (
-                    (combination.id.includes('brelan') && hasThreeOfAKind && parseInt(combination.id.slice(-1)) === threeOfAKindValue) ||
-                    (combination.id === 'full' && hasPair && hasThreeOfAKind) ||
-                    (combination.id === 'carre' && hasFourOfAKind) ||
-                    (combination.id === 'yam' && hasFiveOfAKind) ||
-                    (combination.id === 'suite' && hasStraight) ||
-                    (combination.id === 'moinshuit' && isLessThanEqual8) ||
-                    (combination.id === 'defi' && isDefi)
-                ) {
-                    availableCombinations.push(combination);
-                }
-            });
-
-            return availableCombinations;
+            return fillCombinations(allCombinations, counts);
         }
     },
 
@@ -247,6 +227,100 @@ const GameService = {
             return -1;
         }
     }
+}
+
+function fillCombinations(combinations, counts) {
+    const availableCombinations = [];
+
+    combinations.forEach((combination) => {
+        switch (combination.id) {
+            case 'brelan1':
+            case 'brelan2':
+            case 'brelan3':
+            case 'brelan4':
+            case 'brelan5':
+            case 'brelan6':
+                const idx = parseInt(combination.id.replace('brelan', '')) - 1;
+                if (checkBrelan(counts, idx)) {
+                    availableCombinations.push(combination.value);
+                }
+                break;
+            case 'carre':
+                if (checkCarre(counts)) {
+                    availableCombinations.push(combination.value);
+                }
+                break;
+            case 'yam':
+                if (checkYams(counts)) {
+                    availableCombinations.push(combination.value);
+                }
+                break;
+            case 'full':
+                if (checkFull(counts)) {
+                    availableCombinations.push(combination.value);
+                }
+                break;
+            case 'suite':
+                if (checkSuite(counts)) {
+                    availableCombinations.push(combination.value);
+                }
+                break;
+            case 'moinshuit':
+                if (checkMinusEight(counts)) {
+                    availableCombinations.push(combination.value);
+                }
+                break;
+        }
+    });
+    return availableCombinations;
+}
+
+function checkBrelan(counts, idx) {
+    return counts[idx] >= 3;
+}
+
+function checkCarre(counts) {
+    counts.forEach((count) => {
+        if (count >= 4) {
+            return true;
+        }
+    })
+
+    return false;
+}
+
+function checkYams(counts) {
+    counts.forEach((count) => {
+        if (count >= 5) {
+            return true;
+        }
+    })
+
+    return false;
+}
+
+function checkFull(counts) {
+    let isPair, isBrelan = false;
+
+    counts.forEach((count) => {
+        if (count === 3) {
+            isBrelan = true;
+        } else if (count === 2) {
+            isPair = true;
+        }
+    })
+
+    return isPair && isBrelan;
+}
+
+function checkSuite(counts) {
+    if (counts === [1, 1, 1, 1, 1, 0]) {
+        return true;
+    } else return counts === [0, 1, 1, 1, 1, 1];
+}
+
+function checkMinusEight(counts) {
+    return counts.reduce((acc, cur) => acc + cur, 0) <= 8;
 }
 
 module.exports = GameService;

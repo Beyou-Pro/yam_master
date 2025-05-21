@@ -28,6 +28,13 @@ const updateClientsViewDecks = (game) => {
     }, 200);
 };
 
+const updateClientsViewGrid = (game) => {
+    setTimeout(() => {
+        game.player1Socket.emit('game.grid.view-state', GameService.send.forPlayer.gridViewState('player:1', game.gameState));
+        game.player2Socket.emit('game.grid.view-state', GameService.send.forPlayer.gridViewState('player:2', game.gameState));
+    }, 200)
+}
+
 const updateClientsViewChoices = (game) => {
 
 }
@@ -148,13 +155,11 @@ io.on('connection', socket => {
             games[gameIndex].gameState.deck.rollsCounter++;
             games[gameIndex].gameState.deck.dices = GameService.dices.lockEveryDice(games[gameIndex].gameState.deck.dices);
 
-            // gestion des combinaisons ici
-
             games[gameIndex].gameState.timer = GameService.timer.getEndTurnDuration();
             updateClientsViewTimers(games[gameIndex]);
             updateClientsViewDecks(games[gameIndex]);
         }
-
+        const combinations = GameService.choices.findCombinations(games[gameIndex].gameState.deck.dices, false, false);
     });
 
     socket.on('game.dices.lock', (idDice) => {
