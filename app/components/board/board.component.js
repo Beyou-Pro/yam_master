@@ -2,33 +2,18 @@
 
 import React from "react";
 import { View, Text, StyleSheet } from 'react-native';
-import PlayerTimer from './timers/player-timer.component';
-import OpponentTimer from './timers/opponent-timer.component';
-import OpponentDeck from "./decks/opponent-deck.component";
+import PlayerTimer from './timers/player-timer.component'
+import OpponentTimer from './timers/opponent-timer.component'
 import PlayerDeck from "./decks/player-deck.component";
-import GridComponent  from "./grid/grid.component";
+import OpponentDeck from "./decks/opponent-deck.component";
+import Choices from "./choices/choices.component";
+import Grid from "./grid/grid.component";
+import ScoreComponent from "./score/score.component";
 
 const OpponentInfos = () => {
     return (
         <View style={styles.opponentInfosContainer}>
             <Text>Opponent infos</Text>
-        </View>
-    );
-};
-
-const OpponentScore = () => {
-    return (
-        <View style={styles.opponentScoreContainer}>
-            <Text>Score: </Text>
-        </View>
-    );
-};
-
-const Choices = () => {
-
-    return (
-        <View style={styles.choicesContainer}>
-            <Text>Choices</Text>
         </View>
     );
 };
@@ -41,17 +26,6 @@ const PlayerInfos = () => {
     );
 };
 
-const PlayerScore = () => {
-
-    return (
-        <View style={styles.playerScoreContainer}>
-            <Text>PlayerScore</Text>
-        </View>
-    );
-};
-
-
-
 const Board = ({ gameViewState }) => {
     return (
         <View style={styles.container}>
@@ -59,14 +33,14 @@ const Board = ({ gameViewState }) => {
                 <OpponentInfos />
                 <View style={styles.opponentTimerScoreContainer}>
                     <OpponentTimer />
-                    <OpponentScore />
+                    <ScoreComponent isPlayer={false} />
                 </View>
             </View>
             <View style={[styles.row, { height: '25%' }]}>
                 <OpponentDeck />
             </View>
             <View style={[styles.row, { height: '40%' }]}>
-                <GridComponent />
+                <Grid />
                 <Choices />
             </View>
             <View style={[styles.row, { height: '25%' }]}>
@@ -76,12 +50,13 @@ const Board = ({ gameViewState }) => {
                 <PlayerInfos />
                 <View style={styles.playerTimerScoreContainer}>
                     <PlayerTimer />
-                    <PlayerScore />
+                    <ScoreComponent isPlayer={true} />
                 </View>
             </View>
         </View>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: {
@@ -113,7 +88,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: "lightgrey"
     },
-
     opponentScoreContainer: {
         flex: 1,
         justifyContent: 'center',
@@ -133,18 +107,6 @@ const styles = StyleSheet.create({
         borderRightWidth: 1,
         borderColor: 'black',
     },
-    choicesContainer: {
-        flex: 3,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    deckPlayerContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderColor: 'black',
-    },
     playerInfosContainer: {
         flex: 7,
         justifyContent: 'center',
@@ -160,7 +122,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: "lightgrey"
     },
-
     playerScoreContainer: {
         flex: 1,
         justifyContent: 'center',

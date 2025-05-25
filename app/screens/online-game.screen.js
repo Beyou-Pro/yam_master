@@ -1,11 +1,12 @@
 // app/screens/online-game.screen.js
 
-import React, {useContext} from "react";
-import {StyleSheet, View, Text} from "react-native";
-import {SocketContext} from '../contexts/socket.context';
+import React, { useContext } from "react";
+import { StyleSheet, View, Button, Text } from "react-native";
+import { SocketContext } from '../contexts/socket.context';
 import OnlineGameController from "../controllers/online-game.controller";
 
-export default function OnlineGameScreen({navigation}) {
+
+export default function OnlineGameScreen({ navigation }) {
 
     const socket = useContext(SocketContext);
 

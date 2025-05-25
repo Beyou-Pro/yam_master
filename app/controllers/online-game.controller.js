@@ -1,9 +1,8 @@
 // app/controller/online-game.controller.js
 
 import React, {useEffect, useState, useContext} from "react";
-import {Button, StyleSheet, Text, View} from "react-native";
+import {StyleSheet, Text, View, Button} from "react-native";
 import {SocketContext} from '../contexts/socket.context';
-import HomeScreen from "../screens/home.screen";
 import Board from "../components/board/board.component";
 
 export default function OnlineGameController({navigation}) {
@@ -13,10 +12,6 @@ export default function OnlineGameController({navigation}) {
     const [inQueue, setInQueue] = useState(false);
     const [inGame, setInGame] = useState(false);
     const [idOpponent, setIdOpponent] = useState(null);
-
-    const leaveQueue = () => {
-        socket.emit('queue.leave');
-    }
 
     useEffect(() => {
         console.log('[emit][queue.join]:', socket.id);
@@ -30,17 +25,18 @@ export default function OnlineGameController({navigation}) {
             setInGame(data['inGame']);
         });
 
-        socket.on('queue.left', (data) => {
-            setInQueue(data['inQueue']);
-            setInQueue(data['inGame']);
-            navigation.navigate(HomeScreen);
-        })
-
         socket.on('game.start', (data) => {
             console.log('[listen][game.start]:', data);
             setInQueue(data['inQueue']);
             setInGame(data['inGame']);
             setIdOpponent(data['idOpponent']);
+        });
+
+        socket.on('queue.left', (data) => {
+            console.log('[listen][queue.left]:', data);
+            setInQueue(data['inQueue']);
+            setInGame(data['inGame']);
+            navigation.navigate('HomeScreen');
         });
     }, []);
 
@@ -61,18 +57,19 @@ export default function OnlineGameController({navigation}) {
                     </Text>
                     <View>
                         <Button
-                            title="Quitter la queue"
-                            onPress={() => {leaveQueue();}}
+                            title="Quittez la file d'attente"
+                            onPress={() => {
+                                socket.emit("queue.leave")
+                            }
+                            }
                         />
                     </View>
-
                 </>
-
             )}
 
             {inGame && (
                 <>
-                    <Board/>
+                    <Board />
                 </>
             )}
         </View>

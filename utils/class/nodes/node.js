@@ -1,6 +1,6 @@
 // Node class
 import {NodeState} from "../../enum/nodestate";
-import { Nodevalue } from "../../enum/nodevalue";
+import {NodeValue} from "../../enum/nodevalue";
 
 export class Node {
     x: number;
@@ -17,7 +17,7 @@ export class Node {
     west: Node | null = null;
     northWest: Node | null = null;
 
-    constructor(x: number, y: number, value: Nodevalue, state: NodeState.EMPTY) {
+    constructor(x: number, y: number, value: NodeValue, state: NodeState.EMPTY) {
         this.x = x;
         this.y = y;
         this.value = value;
