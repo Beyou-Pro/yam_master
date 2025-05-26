@@ -176,6 +176,7 @@ io.on('connection', socket => {
 
             // gestion des choix
             const combinations = GameService.choices.findCombinations(dices, isDefi, isSec);
+            console.log(combinations);
             games[gameIndex].gameState.choices.availableChoices = combinations;
 
             // check de la grille si des cases sont disponibles
@@ -226,93 +227,121 @@ io.on('connection', socket => {
         updateClientsViewGrid(games[gameIndex]);
     });
 
-    socket.on('game.grid.selected', (data) => {
+    // socket.on('game.grid.selected', ...) optimized version
 
+    const handleGridSelection = (socket, data) => {
         const gameIndex = GameService.utils.findGameIndexBySocketId(games, socket.id);
+        const game = games[gameIndex];
+        const currentPlayer = game.gameState.currentTurn;
 
-        games[gameIndex].gameState.grid = GameService.grid.resetcanBeCheckedCells(games[gameIndex].gameState.grid);
-        games[gameIndex].gameState.grid = GameService.grid.selectCell(data.cellId, data.rowIndex, data.cellIndex, games[gameIndex].gameState.currentTurn, games[gameIndex].gameState.grid);
+        resetAndSelectCell(game, data);
+        decrementToken(game, currentPlayer);
 
-        // Score check logic
-        const currentPlayer = games[gameIndex].gameState.currentTurn;
-        const grid = games[gameIndex].gameState.grid;
+        const maxAligned = getMaxAlignment(game.gameState.grid, currentPlayer);
+        const tokensUsed = currentPlayer === 'player:1'
+            ? 12 - game.gameState.player1Tokens
+            : 12 - game.gameState.player2Tokens;
 
-        const checkMaxAlignment = (grid, player) => {
-            let max = 0;
-
-            const directions = [
-                {dx: 1, dy: 0},  // horizontal
-                {dx: 0, dy: 1},  // vertical
-                {dx: 1, dy: 1},  // diagonal TL-BR
-                {dx: 1, dy: -1}  // diagonal TR-BL
-            ];
-
-            for (let row = 0; row < 5; row++) {
-                for (let col = 0; col < 5; col++) {
-                    if (grid[row][col].owner !== player) continue;
-
-                    for (let {dx, dy} of directions) {
-                        let count = 1;
-                        let r = row + dy;
-                        let c = col + dx;
-
-                        while (r >= 0 && r < 5 && c >= 0 && c < 5 && grid[r][c].owner === player) {
-                            count++;
-                            r += dy;
-                            c += dx;
-                        }
-
-                        r = row - dy;
-                        c = col - dx;
-
-                        while (r >= 0 && r < 5 && c >= 0 && c < 5 && grid[r][c].owner === player) {
-                            count++;
-                            r -= dy;
-                            c -= dx;
-                        }
-                        if (count > max) max = count;
-                    }
-                }
-            }
-            return max;
-        };
-
-        const maxAligned = checkMaxAlignment(grid, currentPlayer);
-
-        if (maxAligned >= 5) {
-            games[gameIndex].player1Socket.emit("game.end", {winner: currentPlayer});
-            games[gameIndex].player2Socket.emit("game.end", {winner: currentPlayer});
+        if (maxAligned >= 5 || tokensUsed >= 12) {
+            endGame(game, currentPlayer);
             return;
-        } else if (maxAligned === 4) {
-            games[gameIndex].gameState[currentPlayer + "Score"] += 2;
-        } else if (maxAligned === 3) {
-            games[gameIndex].gameState[currentPlayer + "Score"] += 1;
         }
 
+        updateScoreClients(game);
+        switchTurn(game);
+    };
 
-        games[gameIndex].player1Socket.emit("game.score", {
-            playerScore: games[gameIndex].gameState.player1Score,
-            opponentScore: games[gameIndex].gameState.player2Score,
+    const resetAndSelectCell = (game, data) => {
+        game.gameState.grid = GameService.grid.resetcanBeCheckedCells(game.gameState.grid);
+        game.gameState.grid = GameService.grid.selectCell(data.cellId, data.rowIndex, data.cellIndex, game.gameState.currentTurn, game.gameState.grid);
+    };
+
+    const decrementToken = (game, currentPlayer) => {
+        if (currentPlayer === 'player:1') {
+            game.gameState.player1Tokens--;
+        } else {
+            game.gameState.player2Tokens--;
+        }
+    };
+
+    const getMaxAlignment = (grid, player) => {
+        let max = 0;
+        const directions = [
+            {dx: 1, dy: 0},
+            {dx: 0, dy: 1},
+            {dx: 1, dy: 1},
+            {dx: 1, dy: -1}
+        ];
+
+        for (let row = 0; row < 5; row++) {
+            for (let col = 0; col < 5; col++) {
+                if (grid[row][col].owner !== player) continue;
+                for (let {dx, dy} of directions) {
+                    let count = 1;
+                    let r = row + dy;
+                    let c = col + dx;
+                    while (r >= 0 && r < 5 && c >= 0 && c < 5 && grid[r][c].owner === player) {
+                        count++;
+                        r += dy;
+                        c += dx;
+                    }
+                    r = row - dy;
+                    c = col - dx;
+                    while (r >= 0 && r < 5 && c >= 0 && c < 5 && grid[r][c].owner === player) {
+                        count++;
+                        r -= dy;
+                        c -= dx;
+                    }
+                    if (count > max) max = count;
+                }
+            }
+        }
+        return max;
+    };
+
+    const endGame = (game, winner) => {
+        const summary = {
+            winner,
+            scores: {
+                player1: game.gameState.player1Score,
+                player2: game.gameState.player2Score,
+            },
+            tokens: {
+                player1: game.gameState.player1Tokens,
+                player2: game.gameState.player2Tokens,
+            }
+        };
+        game.player1Socket.emit('game.end', summary);
+        game.player2Socket.emit('game.end', summary);
+    };
+
+    const updateScoreClients = (game) => {
+        game.player1Socket.emit("game.score", {
+            playerScore: game.gameState.player1Score,
+            opponentScore: game.gameState.player2Score,
         });
-        games[gameIndex].player2Socket.emit("game.score", {
-            playerScore: games[gameIndex].gameState.player2Score,
-            opponentScore: games[gameIndex].gameState.player1Score,
+        game.player2Socket.emit("game.score", {
+            playerScore: game.gameState.player2Score,
+            opponentScore: game.gameState.player1Score,
         });
+    };
 
-        // end turn
-        games[gameIndex].gameState.currentTurn = games[gameIndex].gameState.currentTurn === 'player:1' ? 'player:2' : 'player:1';
-        games[gameIndex].gameState.timer = GameService.timer.getTurnDuration();
+    const switchTurn = (game) => {
+        game.gameState.currentTurn = game.gameState.currentTurn === 'player:1' ? 'player:2' : 'player:1';
+        game.gameState.timer = GameService.timer.getTurnDuration();
+        game.gameState.deck = GameService.init.deck();
+        game.gameState.choices = GameService.init.choices();
 
-        games[gameIndex].gameState.deck = GameService.init.deck();
-        games[gameIndex].gameState.choices = GameService.init.choices();
+        game.player1Socket.emit('game.timer', GameService.send.forPlayer.gameTimer('player:1', game.gameState));
+        game.player2Socket.emit('game.timer', GameService.send.forPlayer.gameTimer('player:2', game.gameState));
 
-        games[gameIndex].player1Socket.emit('game.timer', GameService.send.forPlayer.gameTimer('player:1', games[gameIndex].gameState));
-        games[gameIndex].player2Socket.emit('game.timer', GameService.send.forPlayer.gameTimer('player:2', games[gameIndex].gameState));
+        updateClientsViewDecks(game);
+        updateClientsViewChoices(game);
+        updateClientsViewGrid(game);
+    };
 
-        updateClientsViewDecks(games[gameIndex]);
-        updateClientsViewChoices(games[gameIndex]);
-        updateClientsViewGrid(games[gameIndex]);
-    });
+    socket.on('game.grid.selected', (data) => handleGridSelection(socket, data));
+
 
     socket.on('disconnect', reason => {
         console.log(`[${socket.id}] socket disconnected - ${reason}`);

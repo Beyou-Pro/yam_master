@@ -81,7 +81,9 @@ const GAME_INIT = {
         player1Score: 0,
         player2Score: 0,
         choices: {},
-        deck: {}
+        deck: {},
+        player1Tokens: 12,
+        player2Tokens: 12,
     }
 }
 
@@ -94,6 +96,8 @@ const GameService = {
             game['gameState']['deck'] = {...DECK_INIT};
             game['gameState']['choices'] = {...CHOICES_INIT};
             game['gameState']['grid'] = [...GRID_INIT];
+            game['gameState']['player1Tokens'] = 12;
+            game['gameState']['player2Tokens'] = 12;
             return game;
         },
 
@@ -214,6 +218,8 @@ const GameService = {
 
     choices: {
         findCombinations: (dices, isDefi, isSec) => {
+            return ALL_COMBINATIONS;
+
             const availableCombinations = [];
             const allCombinations = ALL_COMBINATIONS;
 
@@ -323,10 +329,8 @@ const GameService = {
             const grid = gameState.grid;
             const availableChoices = gameState.choices.availableChoices;
 
-            // parcours de la grille pour vérifier si une combinaison est disponible pour le joueur dont c'est le tour
             for (let row of grid) {
                 for (let cell of row) {
-                    // cérifie si la cellule peut être vérifiée et si elle n'a pas déjà de propriétaire
                     if (cell.owner === null) {
                         for (let combination of availableChoices) {
                             if (cell.id === combination.id) {
@@ -340,7 +344,7 @@ const GameService = {
             return false; // aucune combinaison disponible pour le joueur actuel
         }
     },
-
+    
     utils: {
         // return game index in global games array by id
         findGameIndexById: (games, idGame) => {
