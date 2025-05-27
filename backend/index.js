@@ -227,8 +227,6 @@ io.on('connection', socket => {
         updateClientsViewGrid(games[gameIndex]);
     });
 
-    // socket.on('game.grid.selected', ...) optimized version
-
     const handleGridSelection = (socket, data) => {
         const gameIndex = GameService.utils.findGameIndexBySocketId(games, socket.id);
         const game = games[gameIndex];
@@ -241,6 +239,13 @@ io.on('connection', socket => {
         const tokensUsed = currentPlayer === 'player:1'
             ? 12 - game.gameState.player1Tokens
             : 12 - game.gameState.player2Tokens;
+
+        const scoreThisTurn = GameService.score.getAlignmentScore(game.gameState.grid, currentPlayer);
+        if (currentPlayer === 'player:1') {
+            game.gameState.player1Score = scoreThisTurn;
+        } else {
+            game.gameState.player2Score = scoreThisTurn;
+        }
 
         if (maxAligned >= 5 || tokensUsed >= 12) {
             endGame(game, currentPlayer);

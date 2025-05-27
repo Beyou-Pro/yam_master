@@ -22,10 +22,10 @@ const CHOICES_INIT = {
 
 const GRID_INIT = [
     [
-        {viewContent: '1', id: 'brelan1', owner: null, canBeChecked: false},
-        {viewContent: '3', id: 'brelan3', owner: null, canBeChecked: false},
-        {viewContent: 'Défi', id: 'defi', owner: null, canBeChecked: false},
-        {viewContent: '4', id: 'brelan4', owner: null, canBeChecked: false},
+        {viewContent: '1', id: 'brelan1', owner: "player:1", canBeChecked: true},
+        {viewContent: '3', id: 'brelan3', owner: "player:1", canBeChecked: true},
+        {viewContent: 'Défi', id: 'defi', owner: "player:1", canBeChecked: true},
+        {viewContent: '4', id: 'brelan4', owner: "player:1", canBeChecked: true},
         {viewContent: '6', id: 'brelan6', owner: null, canBeChecked: false},
     ],
     [
@@ -218,7 +218,7 @@ const GameService = {
 
     choices: {
         findCombinations: (dices, isDefi, isSec) => {
-            return ALL_COMBINATIONS;
+            //return ALL_COMBINATIONS;
 
             const availableCombinations = [];
             const allCombinations = ALL_COMBINATIONS;
@@ -344,7 +344,7 @@ const GameService = {
             return false; // aucune combinaison disponible pour le joueur actuel
         }
     },
-    
+
     utils: {
         // return game index in global games array by id
         findGameIndexById: (games, idGame) => {
@@ -372,6 +372,57 @@ const GameService = {
                 }
             }
             return -1;
+        }
+    },
+
+    score: {
+        getAlignmentScore(grid, player) {
+            const directions = [
+                { dx: 1, dy: 0 },  // horizontal
+                { dx: 0, dy: 1 },  // vertical
+                { dx: 1, dy: 1 },  // diagonal TL-BR
+                { dx: 1, dy: -1 }, // diagonal TR-BL
+            ];
+
+            const visited = new Set();
+            let totalScore = 0;
+
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    if (grid[row][col].owner !== player) continue;
+
+                    for (const { dx, dy } of directions) {
+                        const keyStart = `${row},${col},${dx},${dy}`;
+                        if (visited.has(keyStart)) continue;
+
+                        const coords = [];
+                        let r = row;
+                        let c = col;
+
+                        while (
+                            r >= 0 && r < 5 &&
+                            c >= 0 && c < 5 &&
+                            grid[r][c].owner === player
+                            ) {
+                            coords.push(`${r},${c}`);
+                            r += dy;
+                            c += dx;
+                        }
+
+                        if (coords.length === 3) {
+                            totalScore += 1;
+                            visited.add(keyStart);
+                        } else if (coords.length === 4) {
+                            totalScore += 2;
+                            visited.add(keyStart);
+                        } else if (coords.length > 4) {
+                            visited.add(keyStart);
+                        }
+                    }
+                }
+            }
+
+            return totalScore;
         }
     }
 }

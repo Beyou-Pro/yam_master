@@ -1,5 +1,4 @@
 // app/components/game-summary.component.js
-import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 
 const GameSummary = ({ winner, scores, tokens, onReturn }) => {

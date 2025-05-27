@@ -4,6 +4,7 @@ import React, {useEffect, useState, useContext} from "react";
 import {StyleSheet, Text, View, Button} from "react-native";
 import {SocketContext} from '../contexts/socket.context';
 import Board from "../components/board/board.component";
+import GameSummary from "../components/summary/GameSummary";
 
 export default function OnlineGameController({navigation}) {
 
@@ -12,6 +13,9 @@ export default function OnlineGameController({navigation}) {
     const [inQueue, setInQueue] = useState(false);
     const [inGame, setInGame] = useState(false);
     const [idOpponent, setIdOpponent] = useState(null);
+    const [gameEnded, setGameEnded] = useState(false);
+    const [summary, setSummary] = useState(null);
+
 
     useEffect(() => {
         console.log('[emit][queue.join]:', socket.id);
@@ -37,6 +41,11 @@ export default function OnlineGameController({navigation}) {
             setInQueue(data['inQueue']);
             setInGame(data['inGame']);
             navigation.navigate('HomeScreen');
+        });
+
+        socket.on("game.end", (data) => {
+            setSummary(data);
+            setGameEnded(true);
         });
     }, []);
 
@@ -67,10 +76,19 @@ export default function OnlineGameController({navigation}) {
                 </>
             )}
 
-            {inGame && (
-                <>
-                    <Board />
-                </>
+            {inGame && !gameEnded && <Board />}
+            {inGame && gameEnded && summary && (
+                <GameSummary
+                    winner={summary.winner}
+                    scores={summary.scores}
+                    tokens={summary.tokens}
+                    onReturn={() => {
+                        setGameEnded(false);
+                        setInGame(false);
+                        setSummary(null);
+                        navigation.navigate('HomeScreen');
+                    }}
+                />
             )}
         </View>
     );
