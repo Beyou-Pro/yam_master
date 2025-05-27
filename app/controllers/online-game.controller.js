@@ -12,32 +12,28 @@ export default function OnlineGameController({navigation}) {
 
     const [inQueue, setInQueue] = useState(false);
     const [inGame, setInGame] = useState(false);
-    const [idOpponent, setIdOpponent] = useState(null);
+    const [setIdOpponent] = useState(null);
     const [gameEnded, setGameEnded] = useState(false);
     const [summary, setSummary] = useState(null);
 
 
     useEffect(() => {
-        console.log('[emit][queue.join]:', socket.id);
         socket.emit("queue.join");
         setInQueue(false);
         setInGame(false);
 
         socket.on('queue.added', (data) => {
-            console.log('[listen][queue.added]:', data);
             setInQueue(data['inQueue']);
             setInGame(data['inGame']);
         });
 
         socket.on('game.start', (data) => {
-            console.log('[listen][game.start]:', data);
             setInQueue(data['inQueue']);
             setInGame(data['inGame']);
             setIdOpponent(data['idOpponent']);
         });
 
         socket.on('queue.left', (data) => {
-            console.log('[listen][queue.left]:', data);
             setInQueue(data['inQueue']);
             setInGame(data['inGame']);
             navigation.navigate('HomeScreen');

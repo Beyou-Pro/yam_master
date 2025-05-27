@@ -22,10 +22,10 @@ const CHOICES_INIT = {
 
 const GRID_INIT = [
     [
-        {viewContent: '1', id: 'brelan1', owner: "player:1", canBeChecked: true},
-        {viewContent: '3', id: 'brelan3', owner: "player:1", canBeChecked: true},
-        {viewContent: 'Défi', id: 'defi', owner: "player:1", canBeChecked: true},
-        {viewContent: '4', id: 'brelan4', owner: "player:1", canBeChecked: true},
+        {viewContent: '1', id: 'brelan1', owner: null, canBeChecked: true},
+        {viewContent: '3', id: 'brelan3', owner: null, canBeChecked: true},
+        {viewContent: 'Défi', id: 'defi', owner: null, canBeChecked: true},
+        {viewContent: '4', id: 'brelan4', owner: null, canBeChecked: true},
         {viewContent: '6', id: 'brelan6', owner: null, canBeChecked: false},
     ],
     [
@@ -218,28 +218,24 @@ const GameService = {
 
     choices: {
         findCombinations: (dices, isDefi, isSec) => {
-            //return ALL_COMBINATIONS;
-
             const availableCombinations = [];
             const allCombinations = ALL_COMBINATIONS;
 
-            const counts = Array(7).fill(0); // Tableau pour compter le nombre de dés de chaque valeur (de 1 à 6)
-            let hasPair = false; // Pour vérifier si une paire est présente
-            let threeOfAKindValue = null; // Stocker la valeur du brelan
-            let hasThreeOfAKind = false; // Pour vérifier si un brelan est présent
-            let hasFourOfAKind = false; // Pour vérifier si un carré est présent
-            let hasFiveOfAKind = false; // Pour vérifier si un Yam est présent
-            let hasStraight = false; // Pour vérifier si une suite est présente
-            let sum = 0; // Somme des valeurs des dés
+            const counts = Array(7).fill(0);
+            let hasPair = false;
+            let threeOfAKindValue = null;
+            let hasThreeOfAKind = false;
+            let hasFourOfAKind = false;
+            let hasFiveOfAKind = false;
+            let hasStraight = false;
+            let sum = 0;
 
-            // Compter le nombre de dés de chaque valeur et calculer la somme
             for (let i = 0; i < dices.length; i++) {
                 const diceValue = parseInt(dices[i].value);
                 counts[diceValue]++;
                 sum += diceValue;
             }
 
-            // Vérifier les combinaisons possibles
             for (let i = 1; i <= 6; i++) {
                 if (counts[i] === 2) {
                     hasPair = true;
@@ -258,12 +254,10 @@ const GameService = {
                 }
             }
 
-            const sortedValues = dices.map(dice => parseInt(dice.value)).sort((a, b) => a - b); // Trie les valeurs de dé
+            const sortedValues = dices.map(dice => parseInt(dice.value)).sort((a, b) => a - b);
 
-            // Vérifie si les valeurs triées forment une suite
             hasStraight = sortedValues.every((value, index) => index === 0 || value === sortedValues[index - 1] + 1);
 
-            // Vérifier si la somme ne dépasse pas 8
             const isLessThanEqual8 = sum <= 8;
 
             allCombinations.forEach(combination => {
@@ -325,7 +319,6 @@ const GameService = {
         },
 
         isAnyCombinationAvailableOnGridForPlayer: (gameState) => {
-            const currentTurn = gameState.currentTurn;
             const grid = gameState.grid;
             const availableChoices = gameState.choices.availableChoices;
 
@@ -341,16 +334,15 @@ const GameService = {
                 }
             }
 
-            return false; // aucune combinaison disponible pour le joueur actuel
+            return false;
         }
     },
 
     utils: {
-        // return game index in global games array by id
         findGameIndexById: (games, idGame) => {
             for (let i = 0; i < games.length; i++) {
                 if (games[i].idGame === idGame) {
-                    return i; // Retourne l'index du jeu si le socket est trouvé
+                    return i;
                 }
             }
             return -1;
@@ -359,7 +351,7 @@ const GameService = {
         findGameIndexBySocketId: (games, socketId) => {
             for (let i = 0; i < games.length; i++) {
                 if (games[i].player1Socket.id === socketId || games[i].player2Socket.id === socketId) {
-                    return i; // Retourne l'index du jeu si le socket est trouvé
+                    return i;
                 }
             }
             return -1;
@@ -368,7 +360,7 @@ const GameService = {
         findDiceIndexByDiceId: (dices, idDice) => {
             for (let i = 0; i < dices.length; i++) {
                 if (dices[i].id === idDice) {
-                    return i; // Retourne l'index du jeu si le socket est trouvé
+                    return i;
                 }
             }
             return -1;
